@@ -6,7 +6,7 @@ import dedent from "dedent";
 import * as esbuild from "esbuild";
 import * as fs from "fs";
 import * as path from "path";
-import { autoClose, stripFences } from "../lib/code-utils";
+import { stripFences } from "../lib/code-utils";
 
 const MODEL = process.argv[2] || "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8";
 const DATA_DIR = path.join(__dirname, "../data");
@@ -151,9 +151,6 @@ async function run(image: { name: string; base64: string }, idx: number) {
         const text = choice.delta?.content || choice.text || "";
         if (text) code += text;
       }
-
-      // Auto-close unbalanced braces/parens (same as page.tsx)
-      code = autoClose(code);
 
       // Retry if stream was truncated (finish_reason != "stop")
       if (finishReason !== "stop" && attempt < MAX_RETRIES) {
