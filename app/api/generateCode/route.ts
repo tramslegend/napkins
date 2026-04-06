@@ -31,11 +31,12 @@ export async function POST(req: Request) {
   let { model, imageUrl, shadcn } = result.data;
   let codingPrompt = getCodingPrompt(shadcn);
 
-  const res = await together.chat.completions.create({
+  const res = await (together.chat.completions.create as Function)({
     model,
     temperature: 0.2,
-    max_tokens: 32768,
+    max_tokens: 65536,
     stream: true,
+    reasoning: { enabled: false },
     messages: [
       {
         role: 'user',
@@ -65,6 +66,10 @@ export async function POST(req: Request) {
               let parsed = JSON.parse(chunk);
               let choice = parsed.choices?.[0];
               if (!choice) return;
+
+              if (choice.finish_reason) {
+                console.log('Stream finished:', choice.finish_reason);
+              }
 
               let reasoning = choice.delta?.reasoning_content || choice.delta?.reasoning;
               if (reasoning) {
@@ -123,6 +128,7 @@ You are an expert frontend frontend React developer. You will be given a screens
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - If you need an icon, please create an SVG for it and use it in the code. DO NOT IMPORT AN ICON FROM A LIBRARY.
 - Make the design look nice and don't have borders around the entire website even if that's described
+- IMPORTANT: Make sure your code is complete. Every opening brace must have a closing brace, every opening parenthesis must have a closing parenthesis. The code must end with the closing of the default export function. Double check that your JSX is properly closed.
   `;
 
   if (shadcn) {
